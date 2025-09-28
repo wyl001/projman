@@ -1,18 +1,25 @@
+use projman::{scan_projects, start_project_by_yml, Cli, Commands};
+use std::error::Error;
 use clap::Parser;
 
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    #[arg(short, long)]
-    query_string: String,
-    #[arg(short, long)]
-    file_path: String,
-    #[arg(short, long)]
-    ignore_case: bool
+fn main() {
+    let cli = Cli::parse();
+
+    if let Err(e) = run(cli) {
+        eprintln!("错误: {}", e);
+        std::process::exit(1)
+    }
 }
 
-fn main() {
-    let args = Args::parse();
-    println!("{:#?}",args);
 
+fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
+    match cli.command {
+        Commands::List { config } => {
+            scan_projects(config)?;
+        }
+        Commands::Start { name, config } => {
+            start_project_by_yml(&name, &config)?;
+        }
+    }
+    Ok(())
 }

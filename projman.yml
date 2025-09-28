@@ -1,0 +1,16 @@
+projects:
+  - name: mallUi
+    path: C:\MyWork\zcy-project\zcy-supply-mall-ui
+    start: "pnpm dev"
+  - name: sup
+    path: C:\MyWork\zcy-project\zcy-supply-supplier-ui
+    start: "pnpm dev"
+  - name: manager
+    path: C:\MyWork\zcy-project\zcy-supply-manager-ui
+    start: "pnpm dev"
+git:
+  before:
+    is_pull: true
+    commands:
+      - "git checkout master"
+      - "git pull"
