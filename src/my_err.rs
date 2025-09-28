@@ -7,6 +7,7 @@ pub enum AppError {
     ProjectNotFound(String),
     InvalidConfig(String),
     CommandExecutionError(String),
+    GITREPO( String)
 }
 
 impl fmt::Display for AppError {
@@ -16,6 +17,7 @@ impl fmt::Display for AppError {
             AppError::ProjectNotFound(name) => write!(f, "项目不存在: {}", name),
             AppError::InvalidConfig(msg) => write!(f, "配置格式错误: {}", msg),
             AppError::CommandExecutionError(msg) => write!(f, "命令执行失败: {}", msg),
+            AppError::GITREPO( msg) => write!(f, "GIT仓库不存在: {}", msg),
         }
     }
 }

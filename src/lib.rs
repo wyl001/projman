@@ -1,4 +1,5 @@
 mod my_err;
+mod git_commands;
 
 use std::{
     fs,
@@ -6,6 +7,7 @@ use std::{
 };
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
+use crate::git_commands::GitCommand;
 use crate::my_err::AppError;
 
 #[derive( Deserialize)]
@@ -27,7 +29,7 @@ pub struct Git {
 #[derive( Deserialize)]
 pub struct Before {
     is_pull: bool,
-    commands: Vec<String>
+    pull_branch: String
 }
 
 #[derive(Parser)]
@@ -82,7 +84,41 @@ pub fn start_project_by_yml(name: &String, path: &String) -> Result<(), AppError
         .find(|p| p.name.eq(name))
         .ok_or_else(|| AppError::ProjectNotFound(name.clone()))?;
 
+    fetch_project(Option::from(&cfg.git),&project)?;
     start_project(&project)?;
+    Ok(())
+}
+
+fn fetch_project(git: Option<&Git>, project: &Project) -> Result<(), AppError> {
+    // 避免多次 unwrap，可以先解构
+    let git_ref = git.ok_or_else(|| AppError::GITREPO("Git配置为空".to_string()))?;
+    let is_pull = git_ref.before.is_pull;
+    let path = &project.path;
+
+    if is_pull {
+        if !GitCommand::is_git_repo(path) {
+            return Err(AppError::GITREPO("该项目未初始化Git仓库".to_string()));
+        }
+
+        let cfg_branch = &git_ref.before.pull_branch; // 不需要再次 unwrap
+
+        let current_branch = GitCommand::get_current_branch(path)
+            .map_err(|e| AppError::GITREPO(format!("获取当前分支失败: {}", e)))?;
+
+        println!("当前分支: {}", current_branch);
+
+        if *cfg_branch != current_branch {
+            println!("正在切换至：{} 分支", cfg_branch);
+            GitCommand::checkout_branch(path, cfg_branch)
+                .map_err(|e| AppError::GITREPO(format!("切换分支失败: {}", e)))?;
+        }
+
+        // 拉取分支
+        println!("正在拉取：{} 分支", cfg_branch);
+        GitCommand::pull_branch(path, cfg_branch)
+            .map_err(|e| AppError::GITREPO(format!("拉取分支失败: {}", e)))?;
+    }
+
     Ok(())
 }
 

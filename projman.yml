@@ -8,9 +8,10 @@ projects:
   - name: manager
     path: C:\MyWork\zcy-project\zcy-supply-manager-ui
     start: "pnpm dev"
+  - name: projman
+    path: /Users/wyl/Documents/myProject/tauri-project/projman
+    start: "cargo run list"
 git:
   before:
     is_pull: true
-    commands:
-      - "git checkout master"
-      - "git pull"
+    pull_branch: master
