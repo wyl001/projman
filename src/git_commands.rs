@@ -1,4 +1,4 @@
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 pub struct GitCommand;
 
@@ -56,6 +56,8 @@ impl GitCommand {
             .arg("origin")
             .arg(branch)
             .current_dir(path)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .output()
             .map_err(|e| format!("执行 git 命令失败: {}", e))?;
 

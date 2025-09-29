@@ -2,16 +2,19 @@ projects:
   - name: mallUi
     path: C:\MyWork\zcy-project\zcy-supply-mall-ui
     start: "pnpm dev"
+    branch: dev
   - name: sup
     path: C:\MyWork\zcy-project\zcy-supply-supplier-ui
     start: "pnpm dev"
+    branch: dev
   - name: manager
     path: C:\MyWork\zcy-project\zcy-supply-manager-ui
     start: "pnpm dev"
+    branch: dev
   - name: projman
-    path: /Users/wyl/Documents/myProject/tauri-project/projman
+    path: C:\MyWork\rust-project\projman
     start: "cargo run list"
+    branch: master
 git:
   before:
     is_pull: true
-    pull_branch: master

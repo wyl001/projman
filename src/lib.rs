@@ -9,6 +9,7 @@ use clap::{Parser, Subcommand};
 use serde::Deserialize;
 use crate::git_commands::GitCommand;
 use crate::my_err::AppError;
+use dialoguer::{ Select};
 
 #[derive( Deserialize)]
 pub struct Config {
@@ -21,6 +22,7 @@ pub struct Project {
     pub name: String,
     pub path: String,
     pub start: String,
+    pub branch: String
 }
 #[derive( Deserialize)]
 pub struct Git {
@@ -28,8 +30,7 @@ pub struct Git {
 }
 #[derive( Deserialize)]
 pub struct Before {
-    is_pull: bool,
-    pull_branch: String
+    is_pull: bool
 }
 
 #[derive(Parser)]
@@ -61,10 +62,39 @@ pub fn scan_projects(path: String) -> Result<(), AppError> {
     if path.is_empty() {
         return Err(AppError::ConfigFileError("请指定配置文件路径".to_string()));
     }
-    let cfg = load_config(path)?;
-    for p in cfg.projects {
-        println!("项目名称：{}， 项目地址：{}", p.name, p.path)
+    let cfg = load_config(path.clone())?;
+
+    let projects = cfg.projects;
+
+    let mut items = Vec::new();
+    for p in &projects {
+        // println!("项目名称：{}， 项目地址：{}", p.name, p.path);
+        items.push(p.name.clone());
     }
+
+    let selected = Select::new()
+        .with_prompt("请选择要启动的项目")
+        .items(&items)
+        .default(0)
+        .interact_opt()
+        .map_err(|e| AppError::UserCancel(e.to_string()))?; // 这里需要添加 ? 来解包 Result
+
+    // 修复这里的模式匹配
+    if let Some(selected_index) = selected {
+        let selected_name = &items[selected_index];
+        println!("已选择：{}", selected_name);
+
+        let project = projects
+            .iter()
+            .find(|p| p.name.eq(selected_name))
+            .ok_or_else(|| AppError::ProjectNotFound(selected_name.clone()))?;
+
+        start_project_by_yml(&project.name, &path)?;
+
+    } else {
+        println!("用户取消了选择");
+    }
+
     Ok(())
 }
 
@@ -100,7 +130,7 @@ fn fetch_project(git: Option<&Git>, project: &Project) -> Result<(), AppError> {
             return Err(AppError::GITREPO("该项目未初始化Git仓库".to_string()));
         }
 
-        let cfg_branch = &git_ref.before.pull_branch; // 不需要再次 unwrap
+        let cfg_branch = &project.branch; // 不需要再次 unwrap
 
         let current_branch = GitCommand::get_current_branch(path)
             .map_err(|e| AppError::GITREPO(format!("获取当前分支失败: {}", e)))?;
